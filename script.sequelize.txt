@@ -1,0 +1,169 @@
+Sequelize comandos
+
+## instalar dependências
+npm i dotenv sequelize mysql2 
+
+
+## Variávies de ambiente
+## criar arquivo .env 
+DB_USER=root
+DB_PWD=root
+DB_NAME=sequelize_db
+DB_HOST=localhost
+DB_PORT=3306
+DB_DIALECT=mysql
+
+
+## instalar sequelize-cli
+npx sequelize-cli init
+
+
+## Renomeie o arquivo config.json para config.js
+require('dotenv').config();
+module.exports = {
+    development: {
+        username: process.env.DB_USER,
+        password: process.env.DB_PWD,
+        database: process.env.DB_NAME,
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        dialect: process.env.DB_DIALECT,
+        logging: true
+    },
+    test: {
+        username: process.env.DB_USER,
+        password: process.env.DB_PWD,
+        database: process.env.DB_NAME,
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        dialect: process.env.DB_DIALECT,
+        logging: true
+    },
+    production: {
+        username: process.env.DB_USER,
+        password: process.env.DB_PWD,
+        database: process.env.DB_NAME,
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        dialect: process.env.DB_DIALECT
+    }
+};
+
+
+## crie um arquivo .sequelizerc (copiar no arquivo)
+const path = require('path');
+module.exports = {
+  'config': path.resolve('config', 'config.js')
+}
+
+
+## Criar banco de dados
+npx sequelize-cli db:create
+
+
+## cria um arquivo de migration com o nome create-produtos ( olha na pasta migrations - terá somente o esqueleto do arquivo)
+npx sequelize-cli migration:generate --name create-produtos
+
+
+## criar conexão com banco de dados
+## criar pasta db e arquivo conn.js
+const { Sequelize } = require('sequelize');
+require('dotenv').config();
+
+const sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PWD,
+    {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        dialect: process.env.DB_DIALECT,
+
+        // logging: console.log,
+        define: {
+            timestamps: true,
+            freezeTableName: true,
+        },
+    }
+);
+
+module.exports = sequelize;
+
+
+## desenvolver MODEL - na pasta MODELS criar o arquivo produtos.js
+const Sequelize = require('sequelize');
+const database = require('../db');
+ 
+const Produtos = database.define('produtos', {
+    id: {
+      type: Sequelize.INTEGER,
+      allowNull: false,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    descricao: {
+      type: Sequelize.STRING(200),
+      allowNull: false,
+    },
+    preco: {
+      type: Sequelize.DECIMAL(8, 2),
+      allowNull: false,
+    },
+    createdAt: {
+      type: Sequelize.DATE,
+    },
+    updatedAt: {
+      type: Sequelize.DATE,
+    },
+  },
+  { underscored: true },
+  { freezeTableName: true }
+})
+ 
+module.exports = Produtos;
+
+
+## desenvolver MIGRATIONS - arquivo 
+'use strict';
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('produtos', {
+      id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      descricao: {
+        type: Sequelize.STRING(200),
+        allowNull: false,
+      },
+      preco: {
+        type: Sequelize.DECIMAL(8, 2),
+        allowNull: false,
+      },
+      created_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
+      },
+    });
+  },
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('produtos');
+  },
+};
+ 
+
+# executar a migration
+npx sequelize-cli db:migrate
+
+ 
+
