@@ -1,6 +1,10 @@
 const express = require("express");
+const sequelize = require('../db/conn')
 const data_produtos = require('../produtos');
 const produtos = require('../models/produtos');
+const clientes = require('../models/clientes');
+const pedidos = require('../models/pedidos')
+const rlPedidosProdutos = require('../models/rel_pedidos_produtos')
 const app = express();
 
 // analisar o payload JSON recebido e disponibilizar esses dados no  req.body  
@@ -42,7 +46,127 @@ app.post('/produtos', async (req, res, next) => {
         throw error;
     }
 })
+
 // ##### FIM ROTAS PRODUTO  #########
+
+// ##### ROTAS CLIENTES  #########
+app.get('/clientes', async (req, res, next) => {
+    try {
+        // res.status(200).send(data_produtos)
+        res.status(200).send(await clientes.findAll())
+    } catch (error) {
+        throw error;
+    }
+})
+app.get('/clientes/:id', async (req, res, next) => {
+    try {
+        const id = req.params.id
+        res.status(200).send(await clientes.findByPk(id))
+    } catch (error) {
+        throw error;
+    }
+})
+app.post('/clientes', async (req, res, next) => {
+    try {
+        const cliente = req.body;
+        const cliente_data = {
+            "nome": cliente.nome,
+            "email": cliente.email,
+            "cpf": cliente.cpf
+        }
+        res.status(200).send(await clientes.create(cliente_data))
+    } catch (error) {
+        throw error;
+    }
+})
+// ##### FIM ROTAS CLIENTES  #########
+
+// ##### ROTAS PEDIDOS  #########
+app.get('/pedidos/:id', async (req, res, next) => {
+    try {
+        const id = parseInt(req.params.id);
+        //RAW QUERY - sequelize é a conexão com o banco
+        const [results, metadata] = await sequelize.query('SELECT * FROM pedidos WHERE id=' + id);
+        res.status(200).send(results);
+    } catch (error) {
+        throw error;
+    }
+})
+app.get('/pedidos', async (req, res, next) => {
+    try {
+        const id = req.params.id
+        res.status(200).send(await pedidos.findAll())
+    } catch (error) {
+        throw error;
+    }
+})
+app.post('/pedidos', async (req, res, next) => {
+    try {
+        const pedido = req.body;
+        const clienteId = parseInt(pedido.clienteId)
+        const cliente = await clientes.findByPk(clienteId)
+        // Verifica se cliente existe
+        if (!cliente) {
+            const err = new Error('Cliente Not Found');
+            err.status = 400;
+            // console.log(err.status);
+            next(err);
+        }
+        const pedido_data = {
+            "clienteId": clienteId,
+        }
+
+        const pedido_criado = await pedidos.create(pedido_data)
+        const id_pedido_cirado = parseInt(pedido_criado.id)
+
+        const incluiProdutos = new Promise(async (resolve, reject) => {
+            try {
+                // Use map para criar um array de Promises
+                const promessas = pedido.produtos.map(async produto => {
+                    const produto_data = {
+                        pedidoId: id_pedido_cirado,
+                        produtoId: parseInt(produto.id),
+                        quantidade: parseInt(produto.quantidade),
+                        valorUnitario: parseFloat(produto.valorUnitario),
+                    };
+                    await rlPedidosProdutos.create(produto_data);
+                });
+
+                // Aguarde todas as Promises
+                await Promise.all(promessas);
+
+                resolve();
+            } catch (error) {
+                console.error("Erro ao incluir produtos:", error);
+                reject(error);
+            }
+        });
+
+        // Agora apenas aguarde a Promise incluiProdutos
+        incluiProdutos.then(async () => {
+            res.status(200).send(
+                await pedidos.findAll({
+                    where: { id: id_pedido_cirado },
+                    attributes: ['id', 'createdAt'],
+                    include: [{
+                        model: produtos,
+                        attributes: ['descricao'],
+                    }],
+                })
+            );
+        }).catch(error => {
+            console.error("Erro na promise incluiProdutos:", error);
+            const err = new Error('Erro ao processar o pedido');
+            err.status = 500;
+            next(err);
+        });
+
+
+    } catch (error) {
+        throw error;
+    }
+})
+// ##### FIM ROTAS PEDIDOS  #########
 
 
 // realiza tratamento de erro quando rota não encontrada - erro 404 page not fount!
