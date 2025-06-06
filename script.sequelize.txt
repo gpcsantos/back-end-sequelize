@@ -169,7 +169,450 @@ npx sequelize-cli db:migrate
 
 
 ##### AULA 02 ########
+## Comandos sequeilize-cli úteis ##
+
+# instalar sequelize-cli
+npm install --save-dev sequelize-cli
+
+# Para criar um projeto vazio
+npx sequelize-cli init
+
+# Criar uma migration
+npx sequelize-cli migration:generate --name migration-example
+
+# Criar um MODEL
+npx sequelize-cli model:generate --name User --attributes firstName:string,lastName:string,email:string
+
+# TESTE de model:generete, vai criar uma migrate junto com o model
+npx sequelize-cli model:generate --name rel_pedidos_produtos_TESTE --attributes pedido_id:INTEGER,produto_id:INTEGER,quantidade:INTEGER,valor_unitario:DECIMAL
+
+# Rodar as migrations
+npx sequelize-cli db:migrate
+
+# desfazer uma alteração no banco
+npx sequelize-cli db:migrate:undo
+
+# desfazer todas as migrations
+npx sequelize-cli db:migrate:undo:all
+
+# desfazer uma migration específica
+npx sequelize-cli db:migrate:undo:all --to  XXXXXXXXXXXXXX-create-posts.js
+
+## atividade - Criar, baseado no que foi desenvolvido até o momento, uma migration e um model para clientes
+## campos - id, nome, email, cpf, created_at, updated_at
+npx sequelize-cli migration:generate --name create-cliente
+
+## Atividade direcionada 
+## 1 - Criar uma migrate e model para pedido (não inserir campo cliente_id)
+## 2 - Alterar a tabela pedido com mais campos (cliente_id) (criar nova migrate)
+## campos: id, created_at, updated_at
+
+## Parte - 1
+npx sequelize-cli migration:generate --name create-pedidos
+
+## MIGRATION
+'use strict';
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('pedidos', {
+      id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      created_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
+      },
+    });
+  },
+
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('pedidos');
+  }
+};
 
 
- 
+## MODEL
+const Sequelize = require('sequelize');
+const database = require('../db/conn');
 
+const Pedidos = database.define('pedidos', {
+    id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    createdAt: {
+        type: Sequelize.DATE,
+    },
+    updatedAt: {
+        type: Sequelize.DATE,
+    },
+},
+    { underscored: true },
+    { freezeTableName: true }
+)
+
+module.exports = Pedidos;
+
+
+## Parte - 2
+npx sequelize-cli migration:generate --name alterar-pedidos_clienteId
+
+## MIGRATION
+'use strict';
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.addColumn('pedidos',
+      'cliente_id',
+      {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'clientes',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'RESTRICT',
+      },
+      //-- CASO PRECISE DE MAIS CAMPOS --
+      // 'mais_um_campo',
+      // {
+      //   type: Sequelize.INTEGER,
+      //   allowNull: false,
+      //   references: {
+      //     model: 'clientes',
+      //     key: 'id'
+      //   },
+      //   onUpdate: 'CASCADE',
+      //   onDelete: 'RESTRICT',
+      // }
+    )
+  },
+
+  async down(queryInterface, Sequelize) {
+    await queryInterface.removeColumn('pedidos', 'cliente_id');
+  }
+};
+
+## ALTERAR o MODEL pedidos
+const Sequelize = require('sequelize');
+const database = require('../db/conn');
+
+const Pedidos = database.define('pedidos', {
+    id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    clienteId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+    },
+    createdAt: {
+        type: Sequelize.DATE,
+    },
+    updatedAt: {
+        type: Sequelize.DATE,
+    },
+},
+    { underscored: true },
+    { freezeTableName: true }
+)
+
+module.exports = Pedidos;
+
+
+## gerar migration REL_Pedidos_produtos
+npx sequelize-cli migration:generate --name EL_pedidos_produtos
+
+## MIGRATION
+'use strict';
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('rel_pedidos_produtos', {
+      pedido_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'pedidos',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'RESTRICT',
+      },
+      produto_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'produtos',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'RESTRICT',
+      },
+      quantidade: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+      },
+      valor_unitario: {
+        type: Sequelize.DECIMAL(8, 2),
+        allowNull: false,
+      },
+      created_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
+      },
+    }
+    )
+  },
+
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('rel_pedidos_produtos')
+  }
+};
+
+
+
+## MODEL
+const Sequelize = require('sequelize');
+const database = require('../db/conn');
+
+const rlPedidosProdutos = database.define('rel_pedidos_produtos', {
+  pedidoId: {
+    type: Sequelize.INTEGER,
+    allowNull: false,
+  },
+  produtoId: {
+    type: Sequelize.INTEGER,
+    allowNull: false,
+  },
+  quantidade: {
+    type: Sequelize.INTEGER,
+    allowNull: false,
+  },
+  valorUnitario: {
+    type: Sequelize.DECIMAL(8, 2),
+    allowNull: false,
+  },
+  createdAt: {
+    type: Sequelize.DATE,
+  },
+  updatedAt: {
+    type: Sequelize.DATE,
+  },
+},
+  { underscored: true },
+  { freezeTableName: true }
+)
+
+module.exports = rlPedidosProdutos;
+
+
+## Acertando Relacionamentos no Sequelize
+
+## refs.:
+
+
+## arqivo MODEL: clientes.js
+const Pedidos = require('./pedidos');
+
+# antes do module.exports - relacionamento um para vários
+// has many - TEM VÁRIOS: neste caso um cliente pode ter vávios pedidos
+Clientes.hasMany(Pedidos, { as: 'pedidos' })
+
+// belongs To - PERTENCE A: cada pedido pertence à SOMENTE um cliente
+Pedidos.belongsTo(Clientes, { foreignKey: 'clienteId' })
+
+
+## arqivo MODEL: rel_pedidos_produtos.js
+const pedidos = require('./pedidos');
+const produtos = require('./produtos');
+
+# antes do module.exports - relacionamento vários para vários
+pedidos.belongsToMany(produtos, { through: rlPedidosProdutos });
+produtos.belongsToMany(pedidos, { through: rlPedidosProdutos });
+
+
+## abrir base de dados no banco para ver as CONSTRAINTS
+
+
+### --- TODAS AS T ROTAS (arquivo app.js) ---
+// ##### ROTAS PRODUTO  #########
+//rota "/produto" processa requisições para a rota
+app.get('/produtos', async (req, res, next) => {
+    try {
+        // res.status(200).send(data_produtos)
+        res.status(200).send(await produtos.findAll())
+    } catch (error) {
+        throw error;
+    }
+})
+app.get('/produtos/:id', async (req, res, next) => {
+    try {
+        const id = req.params.id
+        res.status(200).send(await produtos.findByPk(id))
+    } catch (error) {
+        throw error;
+    }
+})
+app.post('/produtos', async (req, res, next) => {
+    try {
+        const produto = req.body;
+        const produto_data = {
+            "descricao": produto.descricao,
+            "preco": produto.preco
+        }
+        res.status(200).send(await produtos.create(produto_data))
+    } catch (error) {
+        throw error;
+    }
+})
+
+// ##### FIM ROTAS PRODUTO  #########
+
+// ##### ROTAS CLIENTES  #########
+app.get('/clientes', async (req, res, next) => {
+    try {
+        // res.status(200).send(data_produtos)
+        res.status(200).send(await clientes.findAll())
+    } catch (error) {
+        throw error;
+    }
+})
+app.get('/clientes/:id', async (req, res, next) => {
+    try {
+        const id = req.params.id
+        res.status(200).send(await clientes.findByPk(id))
+    } catch (error) {
+        throw error;
+    }
+})
+app.post('/clientes', async (req, res, next) => {
+    try {
+        const cliente = req.body;
+        const cliente_data = {
+            "nome": cliente.nome,
+            "email": cliente.email,
+            "cpf": cliente.cpf
+        }
+        res.status(200).send(await clientes.create(cliente_data))
+    } catch (error) {
+        throw error;
+    }
+})
+// ##### FIM ROTAS CLIENTES  #########
+
+// ##### ROTAS PEDIDOS  #########
+app.get('/pedidos/:id', async (req, res, next) => {
+    try {
+        const id = parseInt(req.params.id);
+        //RAW QUERY - sequelize é a conexão com o banco
+        const [results, metadata] = await sequelize.query(
+            'SELECT p.id, p.created_at, prod.descricao, rpp.quantidade, rpp.valor_unitario ' +
+            'FROM pedidos AS p INNER JOIN ' +
+            'rel_pedidos_produtos AS rpp ON p.id=rpp.pedido_id INNER JOIN ' +
+            'produtos AS prod ON prod.id=rpp.produto_id ' +
+            'WHERE p.id=' + id);
+        res.status(200).send(results);
+    } catch (error) {
+        throw error;
+    }
+})
+app.get('/pedidos', async (req, res, next) => {
+    try {
+        const id = req.params.id
+        res.status(200).send(await pedidos.findAll())
+    } catch (error) {
+        throw error;
+    }
+})
+app.post('/pedidos', async (req, res, next) => {
+    try {
+        const pedido = req.body;
+        const clienteId = parseInt(pedido.clienteId)
+        const cliente = await clientes.findByPk(clienteId)
+        // Verifica se cliente existe
+        if (!cliente) {
+            const err = new Error('Cliente Not Found');
+            err.status = 400;
+            // console.log(err.status);
+            next(err);
+        }
+        const pedido_data = {
+            "clienteId": clienteId,
+        }
+
+        const pedido_criado = await pedidos.create(pedido_data)
+        const id_pedido_cirado = parseInt(pedido_criado.id)
+
+        const incluiProdutos = new Promise(async (resolve, reject) => {
+            try {
+                // Use map para criar um array de Promises
+                const promessas = pedido.produtos.map(async produto => {
+                    const produto_data = {
+                        pedidoId: id_pedido_cirado,
+                        produtoId: parseInt(produto.id),
+                        quantidade: parseInt(produto.quantidade),
+                        valorUnitario: parseFloat(produto.valorUnitario),
+                    };
+                    await rlPedidosProdutos.create(produto_data);
+                });
+
+                // Aguarde todas as Promises
+                await Promise.all(promessas);
+
+                resolve();
+            } catch (error) {
+                console.error("Erro ao incluir produtos:", error);
+                reject(error);
+            }
+        });
+
+        // Agora apenas aguarde a Promise incluiProdutos
+        incluiProdutos.then(async () => {
+            res.status(200).send(
+                await pedidos.findAll({
+                    where: { id: id_pedido_cirado },
+                    attributes: ['id', 'createdAt'],
+                    include: [{
+                        model: produtos,
+                        attributes: ['descricao'],
+                    }],
+                })
+            );
+        }).catch(error => {
+            console.error("Erro na promise incluiProdutos:", error);
+            const err = new Error('Erro ao processar o pedido');
+            err.status = 500;
+            next(err);
+        });
+
+
+    } catch (error) {
+        throw error;
+    }
+})
+// ##### FIM ROTAS PEDIDOS  #########

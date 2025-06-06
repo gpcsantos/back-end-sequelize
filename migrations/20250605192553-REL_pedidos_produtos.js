@@ -7,7 +7,7 @@ module.exports = {
       pedido_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: {         // User belongsTo Company 1:1
+        references: {
           model: 'pedidos',
           key: 'id'
         },
@@ -17,7 +17,7 @@ module.exports = {
       produto_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: {         // User belongsTo Company 1:1
+        references: {
           model: 'produtos',
           key: 'id'
         },
