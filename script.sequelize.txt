@@ -166,5 +166,10 @@ module.exports = {
 # executar a migration
 npx sequelize-cli db:migrate
 
+
+
+##### AULA 02 ########
+
+
  
 

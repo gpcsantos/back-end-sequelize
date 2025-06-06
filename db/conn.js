@@ -9,9 +9,21 @@ const sequelize = new Sequelize(
         host: process.env.DB_HOST,
         port: process.env.DB_PORT,
         dialect: process.env.DB_DIALECT,
+        timezone: '-03:00',
 
         logging: console.log,
         // logging: false,
+        dialectOptions: {
+            // useUTC: false, //for reading from database
+            dateStrings: true,
+            typeCast: function (field, next) {
+                // for reading from database
+                if (field.type === 'DATETIME') {
+                    return field.string();
+                }
+                return next();
+            },
+        },
         define: {
             timestamps: true,
             freezeTableName: true,

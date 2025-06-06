@@ -86,7 +86,12 @@ app.get('/pedidos/:id', async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
         //RAW QUERY - sequelize é a conexão com o banco
-        const [results, metadata] = await sequelize.query('SELECT * FROM pedidos WHERE id=' + id);
+        const [results, metadata] = await sequelize.query(
+            'SELECT p.id, p.created_at, prod.descricao, rpp.quantidade, rpp.valor_unitario ' +
+            'FROM pedidos AS p INNER JOIN ' +
+            'rel_pedidos_produtos AS rpp ON p.id=rpp.pedido_id INNER JOIN ' +
+            'produtos AS prod ON prod.id=rpp.produto_id ' +
+            'WHERE p.id=' + id);
         res.status(200).send(results);
     } catch (error) {
         throw error;
