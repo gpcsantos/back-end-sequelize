@@ -1,0 +1,63 @@
+@baseurl = http://localhost:3001
+
+
+###
+GET {{baseurl}}
+
+### Get Produtos
+GET {{baseurl}}/produtos
+
+### Get Produtos
+GET {{baseurl}}/produtos/2
+
+###
+POST {{baseurl}}/produtos
+Content-Type: application/json
+
+{
+	"descricao": "Fone QCY HT5",
+	"preco" : "550"
+}
+
+
+### GET Clientes
+GET {{baseurl}}/clientes
+
+### GET Clientes
+GET {{baseurl}}/clientes/2
+
+###
+POST {{baseurl}}/clientes
+Content-Type: application/json
+
+{
+	"nome": "Joelma Santos",
+	"email" : "js@email.com",
+	"cpf": "22222222222"
+}
+
+### PEDIDOS
+GET {{baseurl}}/pedidos/2
+
+###
+GET {{baseurl}}/pedidos
+
+### 
+POST {{baseurl}}/pedidos
+Content-Type: application/json
+
+{
+	"clienteId": 2,
+	"produtos": [
+		{
+			"id": 1,
+			"quantidade": 1,
+			"valorUnitario": 58.30
+		},
+		{
+			"id": 2,
+			"quantidade": 2,
+			"valorUnitario": 78.30
+		}
+	]
+}
