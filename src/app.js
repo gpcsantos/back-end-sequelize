@@ -176,7 +176,7 @@ app.post('/pedidos', async (req, res, next) => {
 
 // realiza tratamento de erro quando rota não encontrada - erro 404 page not fount!
 app.use(function (req, res, next) {
-    var err = new Error('Not Found');
+    let err = new Error('Not Found');
     err.status = 404;
     console.log(err.status);
     next(err);

@@ -338,7 +338,7 @@ module.exports = Pedidos;
 
 
 ## gerar migration REL_Pedidos_produtos
-npx sequelize-cli migration:generate --name EL_pedidos_produtos
+npx sequelize-cli migration:generate --name REL_pedidos_produtos
 
 ## MIGRATION
 'use strict';
@@ -432,8 +432,11 @@ module.exports = rlPedidosProdutos;
 
 
 ## Acertando Relacionamentos no Sequelize
-
 ## refs.:
+## https://medium.com/@rogeriothe_48115/relacionamentos-com-sequelize-guia-final-2b3baf21b2a1
+## https://productoversee.com/sequelize-a-solucao-para-seus-relacionamentos/
+## https://dev.to/gabrielhsilvestre/orm-associations-1oe4#1n
+## https://sequelize.org/docs/v6/core-concepts/assocs/
 
 
 ## arqivo MODEL: clientes.js
